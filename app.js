@@ -26,3 +26,48 @@ request.onupgradeneeded = event => {
 
 };
 
+// Manejo de errores
+request.onerror = event => {
+    // Sólo mostramos el error en consola
+    console.log('DB error:', event.target.error)
+};
+
+// Insertar elementos en la base de datos
+request.onsuccess = event => {
+
+    // Localizamos el request de inserción y lo almacenamos en una variable
+    const db = event.target.result;
+
+    // Elemento que queremos añadir a la base de datos
+    const heroesData = [
+        {id: '1111', heroe: 'Spiderman', mensaje: 'Aquí su amigo Spiderman'},
+        {id: '2222', heroe: 'Ironman', mensaje: 'Aquí en mi nuevo Mark 50'}
+    ];
+
+    // Creamos una transacción para poder insertar la lista en el espacio heroes
+    const heroesTransaction = db.transaction('heroes', 'readwrite');
+
+    // esta transacción podría fallar, por lo que manejamos el error
+    heroesTransaction.onerror = event => {
+        // mostramos en pantalla el error de guardado
+        console.log('Error guardando:', event.target.error)
+    };
+
+    // En caso de que todo esté correcto, informamos sobre el éxito de la transacción
+    heroesTransaction.oncomplete = event => {
+        console.log('Transacción hecha', event);
+    };
+
+    // Esta variable guarda la ubicación donde se van a guardar los datos
+    const heroesStore = heroesTransaction.objectStore('heroes');
+
+    // Barremos nuestro registro para incorporar los elementos de uno en uno
+    for (let heroe of heroesData) {
+        heroesStore.add(heroe);
+    };
+
+    // En caso de que los elementos se hayan añadido a la base de datos correctamente
+    heroesStore.onsuccess = event => {
+        console.log('Nuevo elemento agregado a a BD');
+    };
+};
